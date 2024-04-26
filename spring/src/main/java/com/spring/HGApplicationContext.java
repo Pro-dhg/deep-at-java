@@ -1,6 +1,7 @@
 package com.spring;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Map;
@@ -48,6 +49,22 @@ public class HGApplicationContext {
         try {
             // 通过反射获取实例对象
             Object instance = clazz.getDeclaredConstructor().newInstance();
+
+            // 对属性进行赋值，也就是依赖注入
+
+            for (Field declaredField : clazz.getDeclaredFields()) {
+                // 判断所有属性是否加上了Autowired
+                if (declaredField.isAnnotationPresent(Autowired.class)){
+
+                    // 给属性赋值 ！
+                    Object bean = getBean(declaredField.getName());
+                    declaredField.setAccessible(true);
+                    declaredField.set(instance,bean);
+                }
+
+            }
+
+
             return instance ;
         } catch (InstantiationException e) {
             throw new RuntimeException(e);

@@ -15,15 +15,8 @@ import com.spring.Scope;
  *     - singleton :单例，那么获取的bean都是同一个
  */
 
-@Component("userService")
+@Component("orderService")
 @Scope("prototype")
-public class UserService {
-
-    @Autowired
-    private OrderService orderService ;
-
-    public void test(){
-        System.out.println(orderService);
-    }
+public class OrderService {
 
 }
