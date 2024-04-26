@@ -58,12 +58,15 @@ public class HGApplicationContext {
 
                     // 给属性赋值 ！
                     Object bean = getBean(declaredField.getName());
+
+                    if (bean == null){
+                        throw new NullPointerException() ;
+                    }
                     declaredField.setAccessible(true);
                     declaredField.set(instance,bean);
                 }
 
             }
-
 
             return instance ;
         } catch (InstantiationException e) {

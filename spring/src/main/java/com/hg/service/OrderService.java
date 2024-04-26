@@ -1,6 +1,5 @@
 package com.hg.service;
 
-import com.spring.Autowired;
 import com.spring.Component;
 import com.spring.Scope;
 
