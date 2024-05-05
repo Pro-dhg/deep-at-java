@@ -106,7 +106,8 @@ public class HGApplicationContext {
 
                 if (fileName.endsWith(".class")){
                     String className = fileName.substring(fileName.indexOf("com"), fileName.indexOf(".class"));
-                    className = className.replace("/", ".");
+//                    className = className.replace("/", "."); // mac
+                    className = className.replace("\\", "."); //windows
                     System.out.println(className);
 
                     try {
