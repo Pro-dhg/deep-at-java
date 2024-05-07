@@ -22,6 +22,8 @@ public class UserService implements BeanNameAware, InitializingBean {
 
     private String beanName ;
 
+    private String name ;
+
     public void test(){
         System.out.println(orderService);
         System.out.println(beanName);

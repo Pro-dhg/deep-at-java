@@ -84,6 +84,9 @@ public class HGApplicationContext {
                 }
             }
 
+            // BeanPostProcessor
+
+
             return instance ;
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
