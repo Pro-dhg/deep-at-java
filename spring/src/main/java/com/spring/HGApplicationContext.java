@@ -4,6 +4,8 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,6 +25,9 @@ public class HGApplicationContext {
 
     //所有扫描出来bean的定义
     private ConcurrentHashMap<String,BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>() ;
+
+    // 存储的是 beanPostProcess 给后续创建bean的时候使用
+    private List<BeanPostProcessor> beanPostProcessorList = new ArrayList<>() ;
 
     public HGApplicationContext(Class configClass) {
         this.configClass = configClass;
@@ -75,6 +80,11 @@ public class HGApplicationContext {
                 ((BeanNameAware)instance).setBeanName(beanName);
             }
 
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                // 外部加工后的instance
+                instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+            }
+
             // 初始化
             if (instance instanceof InitializingBean){
                 try {
@@ -84,8 +94,10 @@ public class HGApplicationContext {
                 }
             }
 
-            // BeanPostProcessor
-
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                // 外部加工后的instance
+                instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            }
 
             return instance ;
         } catch (InstantiationException e) {
@@ -104,7 +116,7 @@ public class HGApplicationContext {
         ComponentScan componentScanAnnotation = (ComponentScan) configClass.getDeclaredAnnotation(ComponentScan.class);
         //扫描路径
         String path = componentScanAnnotation.value();
-        System.out.println(path);
+        System.out.println("componentscan路径："+path);
         path = path.replaceAll("\\.","/");
 
         // 扫描
@@ -116,6 +128,7 @@ public class HGApplicationContext {
         ClassLoader classLoader = HGApplicationContext.class.getClassLoader();
         URL resource = classLoader.getResource(path);
         File file = new File(resource.getFile());
+        System.out.println("对应路径："+resource.getFile());
         if (file.isDirectory()) {
 
             File[] files = file.listFiles();
@@ -137,6 +150,19 @@ public class HGApplicationContext {
                             //解析类，判断当前bean是单例bean，还是prototype的bean --> BeanDefinition
                             // BeanDefinition
 
+                            /**
+                             * 判断clazz是否实现了BeanPostProcessor类
+                             * 为什么不用instanceof ？ 因为instanceof是判断实例对象是不是实现了，
+                             *            而我们要判断的是某一个类是不是实现了BeanPostProcessor
+                             */
+                            //当扫描到有beanPostProcessor的类时，需要特殊处理
+                            if (BeanPostProcessor.class.isAssignableFrom(clazz)) {
+                                BeanPostProcessor instance = (BeanPostProcessor) clazz.getDeclaredConstructor().newInstance();
+
+                                // 然后就需要把它存起来，实例化的时候用
+                                beanPostProcessorList.add(instance) ;
+                            }
+
                             Component componentAnnotation = clazz.getDeclaredAnnotation(Component.class);
                             String beanName = componentAnnotation.value();
 
@@ -151,8 +177,14 @@ public class HGApplicationContext {
 
                             beanDefinitionMap.put(beanName,beanDefinition);
                         }
-                    } catch (ClassNotFoundException e) {
+                    } catch (ClassNotFoundException | NoSuchMethodException e) {
                         e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    } catch (InstantiationException e) {
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
                     }
                 }
 
