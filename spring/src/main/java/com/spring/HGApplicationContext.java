@@ -36,14 +36,14 @@ public class HGApplicationContext {
             BeanDefinition beanDefinition = entry.getValue();
             if (beanDefinition.getScope().equals("singleton")) {
                 // 单例Bean
-                Object bean = createBean(beanDefinition);
+                Object bean = createBean(beanName,beanDefinition);
                 singletonObjects.put(beanName,bean);
             }
         }
 
     }
 
-    public Object createBean(BeanDefinition beanDefinition){
+    public Object createBean(String beanName,BeanDefinition beanDefinition){
         // 获取要创建的bean的类型
         Class clazz = beanDefinition.getClazz();
         try {
@@ -67,6 +67,25 @@ public class HGApplicationContext {
                 }
 
             }
+
+            // Aware回调
+            // 当前实例是不是实现了BeanNameAware接口
+            if (instance instanceof BeanNameAware){
+                // 因为实现了，所以可以强制转换
+                ((BeanNameAware)instance).setBeanName(beanName);
+            }
+
+            // 初始化
+            if (instance instanceof InitializingBean){
+                try {
+                    ((InitializingBean)instance).afterPropertiesSett();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // BeanPostProcessor
+
 
             return instance ;
         } catch (InstantiationException e) {
@@ -150,7 +169,7 @@ public class HGApplicationContext {
                 return o;
             }else {
                 // 如果不是单例的，是原型的，那就创建Bean对象 ？
-                Object bean = createBean(beanDefinition);
+                Object bean = createBean(beanName,beanDefinition);
                 return bean ;
             }
         }else {

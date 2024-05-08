@@ -6,6 +6,7 @@ package com.spring;
  * @Version 1.0
  * @Date 2024/4/26 14:52
  * @Description:
+ *  BeanDefinition
  */
 public class BeanDefinition {
 
