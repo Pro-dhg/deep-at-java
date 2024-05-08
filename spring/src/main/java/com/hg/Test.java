@@ -23,6 +23,6 @@ public class Test {
 //        System.out.println(applicationContext.getBean("userService"));
 
         UserService userService = (UserService) applicationContext.getBean("userService");
-        userService.test();
+        userService.test(); //1.先执行代理逻辑（代理对象） 2.在执行原本业务的test方法
     }
 }
